@@ -1,6 +1,6 @@
 package scraping
 
-import "shop-scraping/article"
+import "shops-scraping/article"
 
 type Scraper interface {
 	GetByKeywords(keywords string) (error, []article.Article)
