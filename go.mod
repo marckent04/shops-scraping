@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/2captcha/2captcha-go v1.1.8 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect

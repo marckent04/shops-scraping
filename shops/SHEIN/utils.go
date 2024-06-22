@@ -3,23 +3,21 @@ package SHEIN
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	"golang.org/x/net/context"
 	"golang.org/x/net/html"
 	"log"
-	"shops-scraping/article"
 	"shops-scraping/common"
 	"strconv"
 	"strings"
 )
 
-func getProducts(keywords string) (err error, articles []article.Article) {
+func getProducts(keywords string) (err error, articles []common.Article) {
 	ctx, cancel := chromedp.NewExecAllocator(
 		context.Background(),
-		chromedp.NoDefaultBrowserCheck,
-		//chromedp.UserAgent("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"),
-		//chromedp.Headless,
-		//chromedp.NoSandbox,
+		chromedp.Headless,
+		chromedp.NoSandbox,
 	)
 	defer cancel()
 
@@ -30,21 +28,25 @@ func getProducts(keywords string) (err error, articles []article.Article) {
 
 	log.Println("shein products getting in progress ...")
 	err = chromedp.Run(ctx,
-		//network.SetExtraHTTPHeaders(common.GetBrowserHeaders()),
+		network.SetExtraHTTPHeaders(map[string]interface{}{
+			"Accept":         "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+			"Sec-Fetch-Dest": "document",
+			"Sec-Fetch-Mode": "navigate",
+			"Sec-Fetch-Site": "none",
+			"User-Agent":     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+		}),
 		chromedp.Navigate(fmt.Sprintf("%s/%s", searchUrl, keywords)),
 		chromedp.WaitVisible(".geetest_close", chromedp.ByQuery),
 		chromedp.Click(".geetest_close"),
 		chromedp.WaitNotVisible(".geetest_close"),
 		chromedp.SetJavascriptAttribute("input[name=\"header-search\"]", "value", keywords),
 		chromedp.Click("form.header-search .search-btn", chromedp.ByQuery),
-		chromedp.WaitReady(productsListSelector, chromedp.ByQuery),
 		chromedp.InnerHTML(productsListSelector, &h, chromedp.ByQuery),
 	)
 
 	log.Println("shein products getting in finished")
-
-	log.Println(h)
 	if err != nil {
+		log.Println("laa")
 		log.Println(err.Error())
 	}
 
@@ -60,7 +62,7 @@ func getProducts(keywords string) (err error, articles []article.Article) {
 	return
 }
 
-func nodeToArticle(node *html.Node) article.Article {
+func nodeToArticle(node *html.Node) common.Article {
 	doc := goquery.NewDocumentFromNode(node)
 
 	name, image, detailsPath, price :=
@@ -69,7 +71,7 @@ func nodeToArticle(node *html.Node) article.Article {
 		common.GetAttrValue(doc, "a.goods-title-link", "href"),
 		getProductPrice(doc)
 
-	return article.New(name, image, fmt.Sprintf("%s%s", baseUrl, detailsPath), "H&M", price, "€")
+	return common.New(name, image, fmt.Sprintf("%s%s", baseUrl, detailsPath), "SHEIN", price, "€")
 }
 
 func getProductPrice(doc *goquery.Document) float32 {

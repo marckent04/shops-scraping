@@ -1,15 +1,14 @@
 package HM
 
 import (
-	"shops-scraping/article"
-	"shops-scraping/scraping"
+	"shops-scraping/common"
 )
 
 type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(keywords string) (err error, articles []article.Article) {
+func (s Scraper) GetByKeywords(keywords string) (err error, articles []common.Article) {
 	err, articles = getProducts(keywords)
 	if err != nil {
 		return err, nil
@@ -18,6 +17,6 @@ func (s Scraper) GetByKeywords(keywords string) (err error, articles []article.A
 	return
 }
 
-func NewScrapper() scraping.Scraper {
+func NewScrapper() common.Scraper {
 	return &Scraper{url: searchUrl}
 }
