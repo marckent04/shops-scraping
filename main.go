@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"log"
-	HM "shops-scraping/shops/HM"
+	"shops-scraping/shops/SHEIN"
 )
 
 func main() {
-	HMScraper := HM.NewScrapper()
+	HMScraper := SHEIN.NewScrapper()
 
 	err, articles := HMScraper.GetByKeywords("polo")
 	if err != nil {
