@@ -8,12 +8,13 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/net/html"
 	"log"
-	"shops-scraping/common"
+	"shops-scraping/scraping/common"
+	common2 "shops-scraping/shared"
 	"strconv"
 	"strings"
 )
 
-func getProducts(keywords string) (err error, articles []common.Article) {
+func getProducts(keywords string) (err error, articles []common2.Article) {
 	ctx, cancel := chromedp.NewExecAllocator(
 		context.Background(),
 		chromedp.Headless,
@@ -26,12 +27,16 @@ func getProducts(keywords string) (err error, articles []common.Article) {
 
 	var h string
 
+	log.Println("H&M products getting in progress ...")
+
 	err = chromedp.Run(ctx,
 		network.SetExtraHTTPHeaders(getBrowserHeaders()),
 		chromedp.Navigate(fmt.Sprintf("%s?q=%s", searchUrl, keywords)),
 		chromedp.WaitReady("li:nth-of-type(36)", chromedp.ByQuery),
 		chromedp.InnerHTML(productsListSelector, &h),
 	)
+
+	log.Println("H&M products getting finished")
 
 	if err != nil {
 		log.Println(err.Error())
@@ -49,7 +54,7 @@ func getProducts(keywords string) (err error, articles []common.Article) {
 	return
 }
 
-func nodeToArticle(node *html.Node) common.Article {
+func nodeToArticle(node *html.Node) common2.Article {
 	doc := goquery.NewDocumentFromNode(node)
 
 	name, image, detailsUrl, price :=
@@ -58,7 +63,7 @@ func nodeToArticle(node *html.Node) common.Article {
 		common.GetAttrValue(doc, "a", "href"),
 		getProductPrice(doc)
 
-	return common.New(name, image, detailsUrl, "H&M", price, "€")
+	return common2.New(name, image, detailsUrl, "H&M", price, "€")
 }
 
 func getProductPrice(doc *goquery.Document) float32 {

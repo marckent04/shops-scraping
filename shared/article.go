@@ -1,4 +1,4 @@
-package common
+package shared
 
 type Article struct {
 	Shop       string  `json:"shop"`
