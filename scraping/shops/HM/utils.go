@@ -2,71 +2,58 @@ package HM
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/chromedp"
-	"golang.org/x/net/context"
-	"golang.org/x/net/html"
-	"log"
-	"shops-scraping/scraping/common"
-	common2 "shops-scraping/shared"
+	log "github.com/sirupsen/logrus"
+	"shops-scraping/shared"
 	"strconv"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/go-rod/rod"
 )
 
-func getProducts(keywords string) (err error, articles []common2.Article) {
-	ctx, cancel := chromedp.NewExecAllocator(
-		context.Background(),
-		chromedp.Headless,
-		chromedp.NoSandbox,
-	)
-	defer cancel()
-
-	ctx, cancel = chromedp.NewContext(ctx)
-	defer cancel()
-
-	var h string
+func getProducts(keywords string) (err error, articles []shared.Article) {
 
 	log.Println("H&M products getting in progress ...")
 
-	err = chromedp.Run(ctx,
-		network.SetExtraHTTPHeaders(getBrowserHeaders()),
-		chromedp.Navigate(fmt.Sprintf("%s?q=%s", searchUrl, keywords)),
-		chromedp.WaitReady("li:nth-of-type(36)", chromedp.ByQuery),
-		chromedp.InnerHTML(productsListSelector, &h),
-	)
+	page := rod.New().MustConnect().MustPage(fmt.Sprintf("%s?q=%s", searchUrl, keywords)).MustWaitDOMStable()
+
+	if !page.MustHas(productsListSelector) {
+		return
+	}
+
+	page = page.MustWaitElementsMoreThan(productSelector, 5)
+
+	page.Mouse.Scroll(10, 10000, 30)
+
+	foundArticles := page.MustElements(productSelector)
 
 	log.Println("H&M products getting finished")
 
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(h))
-	if err != nil {
-		return err, nil
-	}
-
-	for _, node := range document.Find(productSelector).Nodes {
-		articles = append(articles, nodeToArticle(node))
+	for _, v := range foundArticles {
+		articles = append(articles, rodeToArticle(v))
 	}
 
 	return
 }
 
-func nodeToArticle(node *html.Node) common2.Article {
-	doc := goquery.NewDocumentFromNode(node)
+func rodeToArticle(node *rod.Element) shared.Article {
 
-	name, image, detailsUrl, price :=
-		common.GetAttrValue(doc, "a", "title"),
-		common.GetAttrValue(doc, "img", "src"),
-		common.GetAttrValue(doc, "a", "href"),
-		getProductPrice(doc)
+	link := node.MustElement("a")
 
-	return common2.New(name, image, detailsUrl, "H&M", price, "€")
+	name, _ := link.Attribute("title")
+	detailsUrl, _ := link.Attribute("href")
+
+	image, price :=
+		getArticleImage(node),
+		getProductPrice(node)
+
+	return shared.New(*name, image, *detailsUrl, "H&M", price, "€")
 }
 
-func getProductPrice(doc *goquery.Document) float32 {
+func getProductPrice(node *rod.Element) float32 {
+	h, _ := node.HTML()
+	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(h))
+
 	priceNode := doc.Find("span").FilterFunction(func(i int, selection *goquery.Selection) bool {
 		return strings.Contains(selection.Text(), "€")
 	}).First()
@@ -81,4 +68,17 @@ func getProductPrice(doc *goquery.Document) float32 {
 	}
 
 	return float32(price)
+}
+
+func getArticleImage(doc *rod.Element) string {
+	img := doc.MustElement("img")
+
+	mainImg, err :=
+		img.Attribute("src")
+
+	if err != nil {
+		return ""
+	}
+
+	return *mainImg
 }

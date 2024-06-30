@@ -2,132 +2,258 @@ package SHEIN
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/chromedp"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"golang.org/x/net/html"
-	"log"
-	"shops-scraping/scraping/common"
-	common2 "shops-scraping/shared"
+	"shops-scraping/shared"
 	"strconv"
 	"strings"
+	"time"
 )
 
-func getProducts(keyword string) (items []common2.Article) {
-	ch := make(chan []common2.Article, 1)
+func getProducts(keyword string) (items []shared.Article) {
 
-	go getProductsWithCaptcha(ch, keyword)
-	go getProductsWithoutCaptcha(ch, keyword)
+	log.Info("Shein articles scrapping begins ...")
+	ch := make(chan []shared.Article, 1)
+
+	url, err := launcher.New().Headless(false).Devtools(false).Launch()
+
+	page := rod.New().NoDefaultDevice().ControlURL(url).MustConnect().MustIncognito().MustPage(baseUrl).MustWaitLoad()
+	defer page.MustClose()
+
+	//page = page.MustWaitDOMStable()
+
+	log.Println(page.MustHTML())
+	var articles []shared.Article
+
+	//ctx, _ := context.WithCancel(context.Background())
+
+	//page = page.Context(ctx)
+
+	captchaBtn := ".geetest_close"
+
+	page = page.Timeout(2 * time.Second)
+
+	waitErr := page.WaitElementsMoreThan(captchaBtn, 0)
+
+	if waitErr == nil {
+		log.Info("captcha resolved")
+		clickErr := page.MustElement(captchaBtn).MustClick()
+		if clickErr != nil {
+			log.Error("close captcha error", err)
+		}
+	} else {
+		log.Info("no captcha btn")
+	}
+
+	discountCloseBtn := ".coupon-dialog .dialog-header-v2__close-btn .btn-default"
+	waitErr = page.WaitElementsMoreThan(discountCloseBtn, 0)
+	if waitErr == nil {
+		clickErr := page.MustElement(discountCloseBtn).MustClick()
+		if clickErr != nil {
+			log.Error("close discount error", err)
+			return
+		} else {
+			log.Info("discount closed")
+		}
+	}
+
+	log.Info("get search input")
+
+	sErr := page.MustElement("form.header-search input").Input(keyword)
+	if sErr != nil {
+		log.Error("Error during search: ", sErr)
+	}
+
+	log.Info("submit form")
+
+	clickErr := page.MustElement("form.header-search .search-btn").Click(proto.InputMouseButtonLeft, 1)
+
+	if clickErr != nil {
+		log.Println("submit form error", clickErr)
+	} else {
+		log.Info("search launched")
+	}
+
+	log.Info("wait for products")
+
+	err = page.WaitElementsMoreThan(productSelector, 4)
+
+	if err != nil {
+		log.Error("elements not found", err)
+		return
+	}
+
+	log.Info("elements found")
+
+	articlesNodes := page.MustElements(productSelector)
+
+	log.Info(articlesNodes)
+
+	for i, node := range articlesNodes {
+		articles = append(articles, rodeToArticle(*node))
+		log.Infof("article %d/%d processed", i, len(articlesNodes))
+	}
+
+	log.Info("articles getting finished")
 
 	items = <-ch
 
 	return
 }
 
-func getProductsWithoutCaptcha(ch chan<- []common2.Article, keywords string) (err error) {
-	var articles []common2.Article
+func getOnlyArticles(page *rod.Page, keyword string) {
+	inputErr := page.MustElement("input[name=\"header-search\"]").Input(keyword)
 
-	ctx, cancel := chromedp.NewExecAllocator(
-		context.Background(),
-		chromedp.Headless,
-		chromedp.NoSandbox,
-	)
-	defer cancel()
+	if inputErr != nil {
+		log.Println("inputErr", inputErr)
+	}
 
-	ctx, cancel = chromedp.NewContext(ctx)
-	defer cancel()
+	clickErr := page.MustElement("form.header-search .search-btn").Click(proto.InputMouseButtonLeft, 1)
 
-	var h string
+	if clickErr != nil {
+		log.Println("submit form error", clickErr)
+	}
 
-	log.Println("shein products getting in progress ...")
+	page = page.MustWaitElementsMoreThan(productSelector, 4)
 
-	err = chromedp.Run(ctx,
-		network.SetExtraHTTPHeaders(common.Headers),
-		chromedp.Navigate(fmt.Sprintf("%s/%s", searchUrl, keywords)),
-		chromedp.InnerHTML(productsListSelector, &h, chromedp.ByQuery),
-	)
+	articlesNodes := page.MustElements(productSelector)
 
-	log.Println("shein products getting in finished")
+	log.Println(articlesNodes)
+
+}
+
+func getProductsWithCaptcha(pageValue rod.Page, ch chan<- []shared.Article, keyword string) (err error) {
+	var articles []shared.Article
+
+	ctx, _ := context.WithCancel(context.Background())
+	page := &pageValue
+
+	page = page.Context(ctx)
+
+	captchaBtn := ".geetest_close"
+
+	waitErr := page.Timeout(2*time.Second).WaitElementsMoreThan(captchaBtn, 0)
+
+	if waitErr == nil {
+		log.Info("captcha resolved")
+		clickErr := page.MustElement(captchaBtn).Click(proto.InputMouseButtonLeft, 1)
+		if clickErr != nil {
+			log.Error("close captcha error", err)
+			return
+		}
+	} else {
+		log.Error("error during captcha waiting ", waitErr)
+	}
+
+	log.Info("get search input")
+	sErr := page.MustElement("input[name=\"header-search\"]").Input(keyword)
+	if sErr != nil {
+		log.Error("Error during search: ", sErr)
+	}
+
+	log.Info("submit form")
+
+	clickErr := page.MustElement("form.header-search .search-btn").Click(proto.InputMouseButtonLeft, 1)
+
+	if clickErr != nil {
+		log.Println("submit form error", clickErr)
+	} else {
+		log.Info("search launched")
+	}
+
+	log.Info("wait for products")
+
+	err = page.WaitElementsMoreThan(productSelector, 4)
+
 	if err != nil {
-		log.Println(err.Error())
+		log.Error("elements not found", err)
+		return
 	}
 
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(h))
+	log.Info("elements found")
 
-	if err != nil {
-		return err
+	articlesNodes := page.MustElements(productSelector)
+
+	log.Info(articlesNodes)
+
+	for i, node := range articlesNodes {
+		articles = append(articles, rodeToArticle(*node))
+		log.Infof("article %d/%d processed", i, len(articlesNodes))
 	}
 
-	for _, node := range document.Find(productSelector).Nodes {
-		articles = append(articles, nodeToArticle(node))
-	}
+	log.Info("articles getting finished")
+
+	//page = page.MustWaitElementsMoreThan(productSelector, 4)
+
+	// ctx, cancel := chromedp.NewExecAllocator(
+	// 	context.Background(),
+	// 	chromedp.Headless,
+	// 	chromedp.NoSandbox,
+	// )
+	// defer cancel()
+
+	// ctx, cancel = chromedp.NewContext(ctx)
+
+	// defer cancel()
+
+	// var h string
+
+	// log.Println("shein products getting expected captcha in progress ...")
+
+	// err = chromedp.Run(ctx,
+	// 	network.SetExtraHTTPHeaders(common.Headers),
+	// 	chromedp.Navigate(fmt.Sprintf("%s/%s", searchUrl, keywords)),
+	// 	chromedp.WaitVisible(".geetest_close", chromedp.ByQuery),
+	// 	chromedp.Click(".geetest_close"),
+	// 	chromedp.WaitNotVisible(".geetest_close"),
+	// 	chromedp.SetJavascriptAttribute("input[name=\"header-search\"]", "value", keywords),
+	// 	chromedp.Click("form.header-search .search-btn", chromedp.ByQuery),
+	// 	chromedp.InnerHTML(productsListSelector, &h, chromedp.ByQuery),
+	// )
+
+	// log.Println("shein products getting expected captcha finished")
+	// if err != nil {
+	// 	return err
+	// }
+
+	// document, err := goquery.NewDocumentFromReader(strings.NewReader(h))
+	// if err != nil {
+	// 	return err
+	// }
+
+	// for _, node := range document.Find(productSelector).Nodes {
+	// 	articles = append(articles, nodeToArticle(node))
+	// }
 
 	ch <- articles
 	return
 }
 
-func getProductsWithCaptcha(ch chan<- []common2.Article, keywords string) (err error) {
-	var articles []common2.Article
-
-	ctx, cancel := chromedp.NewExecAllocator(
-		context.Background(),
-		chromedp.Headless,
-		chromedp.NoSandbox,
-	)
-	defer cancel()
-
-	ctx, cancel = chromedp.NewContext(ctx)
-
-	defer cancel()
-
-	var h string
-
-	log.Println("shein products getting expected captcha in progress ...")
-
-	err = chromedp.Run(ctx,
-		network.SetExtraHTTPHeaders(common.Headers),
-		chromedp.Navigate(fmt.Sprintf("%s/%s", searchUrl, keywords)),
-		chromedp.WaitVisible(".geetest_close", chromedp.ByQuery),
-		chromedp.Click(".geetest_close"),
-		chromedp.WaitNotVisible(".geetest_close"),
-		chromedp.SetJavascriptAttribute("input[name=\"header-search\"]", "value", keywords),
-		chromedp.Click("form.header-search .search-btn", chromedp.ByQuery),
-		chromedp.InnerHTML(productsListSelector, &h, chromedp.ByQuery),
-	)
-
-	log.Println("shein products getting expected captcha finished")
-	if err != nil {
-		return err
-	}
-
-	document, err := goquery.NewDocumentFromReader(strings.NewReader(h))
-	if err != nil {
-		return err
-	}
-
-	for _, node := range document.Find(productSelector).Nodes {
-		articles = append(articles, nodeToArticle(node))
-	}
-
-	ch <- articles
-	return
-}
-
-func nodeToArticle(node *html.Node) common2.Article {
-	doc := goquery.NewDocumentFromNode(node)
-
+func rodeToArticle(node rod.Element) shared.Article {
 	name, image, detailsPath, price :=
-		getProductName(doc),
-		strings.Replace(common.GetAttrValue(doc, "img", "src"), "//", "", 1),
-		common.GetAttrValue(doc, "a.goods-title-link", "href"),
-		getProductPrice(doc)
+		getProductName(node),
+		"",
+		//getArticleImage(node),
+		"",
+		//*node.MustElement("a.goods-title-link").MustAttribute("href"),
+		float32(0)
+	//getProductPrice(node)
 
-	return common2.New(name, image, fmt.Sprintf("%s%s", baseUrl, detailsPath), "SHEIN", price, "€")
+	return shared.New(name, image, fmt.Sprintf("%s%s", baseUrl, detailsPath), "SHEIN", price, "€")
 }
 
-func getProductPrice(doc *goquery.Document) float32 {
-	priceTxt := doc.Find(".product-card__prices-info").Text()
+func getProductPrice(doc rod.Element) float32 {
+	priceElt, err := doc.Element(".product-card__prices-info span")
+
+	if err != nil {
+		return 0
+	}
+
+	priceTxt := priceElt.MustText()
+
 	priceTxt = strings.Replace(priceTxt, ",", ".", 1)
 
 	priceTxt, exists := strings.CutSuffix(priceTxt, "€")
@@ -146,7 +272,31 @@ func getProductPrice(doc *goquery.Document) float32 {
 	return float32(price)
 }
 
-func getProductName(doc *goquery.Document) string {
-	title := strings.Replace(doc.Find("a.goods-title-link").Text(), "SHEIN", "", 1)
-	return strings.Trim(title, " ")
+func getProductName(doc rod.Element) string {
+	title, err := doc.MustElement("a.goods-title-link").Text()
+	if err != nil {
+		return ""
+	}
+	return strings.Trim(strings.Replace(title, "SHEIN", "", 1), " ")
+}
+
+func getArticleImage(doc rod.Element) string {
+	value, err := doc.MustElement(".crop-image-container__inner").Attribute("style")
+
+	if err != nil {
+		log.Println("no image")
+		return "ok"
+	}
+	if len(*value) > 1 {
+		return extractImage(*value)
+	}
+
+	return *doc.MustElement(".crop-image-container__img").MustAttribute("src")
+}
+
+func extractImage(style string) string {
+	b, e := strings.Index(style, "("),
+		strings.Index(style, ")")
+
+	return style[b+1 : e]
 }
