@@ -1,38 +1,28 @@
 <template>
-  <main class="container mx-auto">
-    <h1 class="text-center">Resultats de recherche pour {{ route.query.q }}</h1>
-
-    <div class="my-5 flex justify-center">
-      <search-bar></search-bar>
+  <v-container>
+<div>
+  <div class="d-flex justify-space-between">
+    <h3>Resultats de recherche pour "{{ route.query.q }}"</h3>
+    <v-btn popovertarget="search-modal">Rechercher</v-btn>
+  </div>
+   <div id="search-modal" popover>
+     <h4 class="text-center">recherche de vetements</h4>
+     <search-form ></search-form>
+   </div>
+</div>
+    <div class="articles-grid mt-6">
+      <article-card :article="article" v-for="article in articles" :key="article.title" />
     </div>
-
-    <div class="grid grid-cols-4 gap-5">
-      <div class="card bg-base-100  shadow-xl" v-for="article in articles" :key="article.title">
-        <figure>
-          <img
-              :src="article.image"
-              :alt="article.title" />
-        </figure>
-        <div class="card-body flex-row justify-between">
-          <div>
-            <h2 class="card-title" v-text="article.title"></h2>
-            <p>{{ article.price + article.currency}}</p>
-          </div>
-          <div>
-            <button class="btn btn-primary">Buy Now</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+  </v-container>
 </template>
 
 <script setup lang="ts">
 import {useRoute} from "vue-router"
 import {watch, ref} from "vue"
-import {client} from "../httpClient.ts";
 import {Article} from "../types/article.ts";
-import SearchBar from "../components/SearchBar.vue";
+import ArticleCard from "../components/ArticleCard.vue";
+import {client} from "../httpClient.ts";
+import SearchForm from "../components/SearchForm.vue";
 
 const route = useRoute();
 const articles = ref<Article[]>([]);
@@ -41,22 +31,23 @@ const controller = new AbortController();
 
 watch(() => route.query, async (curr) => {
  // controller.abort();
-
-  let request = client.get(`/${curr.shop}/articles?keyword=${curr.q}`, {
-    signal: controller.signal
-  })
-
-  if (curr.shop === "all") {
-    request = client.get(`/articles?keyword=${curr.q}`, {
-      signal: controller.signal
-    })
-  }
+  //  border: none;
+  //box-shadow: 0 0 10px gray;
 
   try {
-    const { data } = await request
-    articles.value = data
+    const { data } = await  client.get(`/articles`, {
+      signal: controller.signal,
+      params: {
+        q: curr.q,
+        shops: curr.shops
+      }
+    })
+
+    if (Array.isArray(data)) {
+      articles.value = data
+    }
   } catch (e) {
-    console.log(e)
+    console.error(e)
     alert("an error occured")
   }
 },{immediate: true})
@@ -66,5 +57,18 @@ watch(() => route.query, async (curr) => {
 </script>
 
 <style scoped>
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 20px 20px;
 
+}
+
+  #search-modal {
+    padding: 30px;
+    width: 40vw;
+    position: absolute;
+    left: 30vw;
+    top: 40px;
+}
 </style>

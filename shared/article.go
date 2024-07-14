@@ -10,6 +10,11 @@ type Article struct {
 }
 
 func New(name, image, detailsUrl, shop string, price float32, currency string) Article {
+
+	if len(image) == 0 {
+		image = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1200px-No-Image-Placeholder.svg.png"
+	}
+
 	return Article{
 		Name:       name,
 		Image:      image,

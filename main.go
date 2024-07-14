@@ -1,23 +1,39 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"shops-scraping/shops/SHEIN"
+	"fmt"
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
+	"net/http"
+	"os"
+	"shops-scraping/webservice"
+	articlesController "shops-scraping/webservice/articles"
 )
 
 func main() {
-	HMScraper := SHEIN.NewScrapper()
 
-	err, articles := HMScraper.GetByKeywords("polo")
+	setupEnv()
+	startWebserver()
+}
+
+func setupEnv() {
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error loading .env file")
 	}
 
-	articlesJson, err := json.Marshal(articles)
-	if err != nil {
+}
+
+func startWebserver() {
+	webservice.ServeFrontend()
+	webservice.RegisterApiRoutes(articlesController.Routes)
+
+	port := os.Getenv("PORT")
+
+	log.Println("Welcome to shop scraper api")
+	log.Println("server is launching on port ", port)
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal(err)
 	}
-
-	log.Println(string(articlesJson))
 }

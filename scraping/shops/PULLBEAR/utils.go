@@ -60,7 +60,7 @@ func rodeToArticle(elt *rod.Element) shared.Article {
 	price := getArticlePrice(eltSh)
 	image := getArticleImg(eltSh)
 
-	return shared.New(strings.ToTitle(name), image, *detailsUrl, "ZARA", price, "€")
+	return shared.New(strings.ToTitle(name), image, *detailsUrl, shopName, price, "€")
 }
 
 func getArticleImg(elt *rod.Element) string {

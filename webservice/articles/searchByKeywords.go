@@ -8,7 +8,8 @@ import (
 	"shops-scraping/scraping/common"
 	"shops-scraping/scraping/shops/BERSHKA"
 	"shops-scraping/scraping/shops/HM"
-	"shops-scraping/scraping/shops/SHEIN"
+	"shops-scraping/scraping/shops/PULLBEAR"
+	"shops-scraping/scraping/shops/ZARA"
 	"shops-scraping/shared"
 )
 
@@ -16,13 +17,14 @@ func searchByKeywords(rsp http.ResponseWriter, req *http.Request) {
 	var allArticles []shared.Article
 	keyword := req.URL.Query().Get("keyword")
 
-	totalShops := 3
+	totalShops := 4
 
 	articlesCh := make(chan []shared.Article, totalShops)
 
-	go getArticlesByKeywords(articlesCh, SHEIN.NewScrapper(), keyword)
+	go getArticlesByKeywords(articlesCh, ZARA.NewScrapper(), keyword)
 	go getArticlesByKeywords(articlesCh, HM.NewScrapper(), keyword)
 	go getArticlesByKeywords(articlesCh, BERSHKA.NewScrapper(), keyword)
+	go getArticlesByKeywords(articlesCh, PULLBEAR.NewScrapper(), keyword)
 
 	for i := 1; i <= totalShops; i++ {
 		allArticles = append(allArticles, <-articlesCh...)
@@ -43,31 +45,7 @@ func searchByKeywords(rsp http.ResponseWriter, req *http.Request) {
 	rsp.Write(indent)
 }
 
-func getSheinArticles(ch chan []shared.Article, keyword string) {
-	scper := SHEIN.NewScrapper()
-
-	err, art := scper.GetByKeywords(keyword)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	ch <- art
-}
-
-func getHMArticles(ch chan<- []shared.Article, keyword string) {
-	scper := HM.NewScrapper()
-
-	err, art := scper.GetByKeywords(keyword)
-	if err != nil {
-		return
-	}
-
-	ch <- art
-}
-
 func getArticlesByKeywords(ch chan<- []shared.Article, scraper common.Scraper, keyword string) {
-
 	err, art := scraper.GetByKeywords(keyword)
 	if err != nil {
 		return
