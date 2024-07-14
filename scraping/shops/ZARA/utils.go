@@ -10,12 +10,12 @@ import (
 	"github.com/go-rod/rod"
 )
 
-func getProducts(keyword string) (err error, articles []shared.Article) {
+func getProducts(browser *rod.Browser, keyword string) (err error, articles []shared.Article) {
 
 	channel := make(chan []shared.Article, 2)
 
-	go getArticlesFor(man, channel, keyword)
-	go getArticlesFor(woman, channel, keyword)
+	go getArticlesFor(browser, man, channel, keyword)
+	go getArticlesFor(browser, woman, channel, keyword)
 
 	articles = append(articles, <-channel...)
 	articles = append(articles, <-channel...)
@@ -23,7 +23,7 @@ func getProducts(keyword string) (err error, articles []shared.Article) {
 	return
 }
 
-func getArticlesFor(cat category, articlesChan chan<- []shared.Article, keyword string) {
+func getArticlesFor(browser *rod.Browser, cat category, articlesChan chan<- []shared.Article, keyword string) {
 	var articles []shared.Article
 
 	log.Printf("%s products for %s getting in progress ...", shopName, cat)
@@ -36,7 +36,7 @@ func getArticlesFor(cat category, articlesChan chan<- []shared.Article, keyword 
 	}
 	page = page.MustWaitElementsMoreThan(articleSelector, 1)
 
-	page.Mouse.Scroll(10, 10000, 30)
+	page.Mouse.Scroll(10, 10000, 15)
 
 	foundArticles := page.MustElements(articleSelector)
 

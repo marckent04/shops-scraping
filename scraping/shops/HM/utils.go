@@ -11,11 +11,11 @@ import (
 	"github.com/go-rod/rod"
 )
 
-func getProducts(keywords string) (err error, articles []shared.Article) {
+func getProducts(browser *rod.Browser, keywords string) (err error, articles []shared.Article) {
 
 	log.Println("H&M products getting in progress ...")
 
-	page := rod.New().MustConnect().MustPage(fmt.Sprintf("%s?q=%s", searchUrl, keywords)).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf("%s?q=%s", searchUrl, keywords)).MustWaitDOMStable()
 
 	if !page.MustHas(productsListSelector) {
 		return
@@ -23,7 +23,7 @@ func getProducts(keywords string) (err error, articles []shared.Article) {
 
 	page = page.MustWaitElementsMoreThan(productSelector, 5)
 
-	page.Mouse.Scroll(10, 10000, 30)
+	page.Mouse.Scroll(10, 10000, 10)
 
 	foundArticles := page.MustElements(productSelector)
 

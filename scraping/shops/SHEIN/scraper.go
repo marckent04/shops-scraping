@@ -1,7 +1,6 @@
 package SHEIN
 
 import (
-	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
 )
 
@@ -19,6 +18,6 @@ func (s Scraper) GetByKeywords(keywords string) (err error, articles []shared.Ar
 	return
 }
 
-func NewScrapper() common.Scraper {
-	return &Scraper{url: searchUrl}
-}
+//func NewScrapper() common.Scraper {
+//	return &Scraper{url: searchUrl}
+//}

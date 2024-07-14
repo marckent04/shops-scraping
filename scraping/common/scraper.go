@@ -1,7 +1,10 @@
 package common
 
-import "shops-scraping/shared"
+import (
+	"github.com/go-rod/rod"
+	"shops-scraping/shared"
+)
 
 type Scraper interface {
-	GetByKeywords(keywords string) (error, []shared.Article)
+	GetByKeywords(browser *rod.Browser, keywords string) (error, []shared.Article)
 }

@@ -10,10 +10,10 @@ import (
 	"github.com/go-rod/rod"
 )
 
-func getProducts(keyword string) (err error, articles []shared.Article) {
+func getProducts(browser *rod.Browser, keyword string) (err error, articles []shared.Article) {
 	log.Printf("%s products getting in progress ...", shopName)
 
-	page := rod.New().MustConnect().MustPage(fmt.Sprintf("%s/%s", searchUrl, keyword)).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf("%s/%s", searchUrl, keyword)).MustWaitDOMStable()
 
 	isEmpty := page.MustHas(".search-empty__empty")
 
