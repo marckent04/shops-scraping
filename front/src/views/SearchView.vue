@@ -42,7 +42,8 @@ watch(() => route.query, async (curr) => {
       signal: controller.signal,
       params: {
         q: curr.q,
-        shops: curr.shops
+        gender: curr.g,
+        shops: curr.shops,
       }
     })
 

@@ -3,24 +3,34 @@
         <div class="mb-2">
           <v-text-field type="search" placeholder="..." label="I search for"  v-model="form.keyword">
           </v-text-field>
+          <div class="d-flex">
+            <div class="mr-4">
+              <input type="radio" id="woman" value="w" v-model="form.gender" class="mr-2">
+              <label for="woman">Femme</label>
+            </div>
+            <div>
+              <input type="radio" id="man" value="m" v-model="form.gender" class="mr-2">
+              <label for="man">Homme</label>
+            </div>
+          </div>
           <div class="d-flex flex-wrap justify-space-between flex-start w-full">
-          <span
-              v-for="elt in elts" :key="elt.value"
-              class="mr-3"
-          >
-            <input
-                :id="elt.value"
-                type="checkbox"
-                v-model="form.shops"
-                :value="elt.value"
-                class="mr-1"
-            />
-            <label
-                v-text="elt.text"
-                :for="elt.value"
-            ></label>
+            <span
+                v-for="elt in elts" :key="elt.value"
+                class="mr-3"
+            >
+              <input
+                  :id="elt.value"
+                  type="checkbox"
+                  v-model="form.shops"
+                  :value="elt.value"
+                  class="mr-1"
+              />
+              <label
+                  v-text="elt.text"
+                  :for="elt.value"
+              ></label>
 
-          </span>
+            </span>
           </div>
         </div>
         <v-btn color="primary" type="submit">Rechercher</v-btn>
@@ -35,8 +45,9 @@ const router = useRouter()
 const route = useRoute();
 
 
-const form = reactive<{keyword: string, shops: string[]}>({
+const form = reactive<{keyword: string, shops: string[], gender: string}>({
   keyword: "",
+  gender: "",
   shops: []
 })
 
@@ -44,12 +55,13 @@ const selectedShops = computed(() => form.shops.filter(elt => elt != "all"))
 
 watch(route, (r) => {
   form.keyword = r.query.q?.toString()  ?? ""
+  form.gender = r.query.g?.toString()  ?? ""
   form.shops = (r.query.shops as string | undefined)?.split(",") ?? []
 }, {immediate: true})
 
 function search() {
   if (form.shops.length && form.keyword) {
-    router.push({name: "search", query: {shops: selectedShops.value.join(","), q: form.keyword }})
+    router.push({name: "search", query: {shops: selectedShops.value.join(","), q: form.keyword, g: form.gender }})
   } else {
     alert("all fields must be filled")
   }
