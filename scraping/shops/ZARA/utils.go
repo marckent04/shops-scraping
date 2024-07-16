@@ -1,7 +1,6 @@
 package ZARA
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"shops-scraping/shared"
 	"strconv"
@@ -9,49 +8,6 @@ import (
 
 	"github.com/go-rod/rod"
 )
-
-func getProducts(browser *rod.Browser, keyword string) (err error, articles []shared.Article) {
-
-	channel := make(chan []shared.Article, 2)
-
-	go getArticlesFor(browser, man, channel, keyword)
-	go getArticlesFor(browser, woman, channel, keyword)
-
-	articles = append(articles, <-channel...)
-	articles = append(articles, <-channel...)
-
-	return
-}
-
-func getArticlesFor(browser *rod.Browser, cat category, articlesChan chan<- []shared.Article, keyword string) {
-	var articles []shared.Article
-
-	log.Printf("%s products for %s getting in progress ...", shopName, cat)
-
-	page := rod.New().MustConnect().MustPage(fmt.Sprintf(searchUrl, keyword, cat)).MustWaitDOMStable()
-
-	if page.MustHas(".zds-empty-state__title") {
-		articlesChan <- articles
-		return
-	}
-	page = page.MustWaitElementsMoreThan(articleSelector, 1)
-
-	page.Mouse.Scroll(10, 10000, 15)
-
-	foundArticles := page.MustElements(articleSelector)
-
-	for _, node := range foundArticles {
-		if !node.MustHas(".money-amount__main") {
-			continue
-		}
-
-		articles = append(articles, rodeToArticle(node))
-	}
-
-	articlesChan <- articles
-
-	return
-}
 
 func rodeToArticle(elt *rod.Element) shared.Article {
 	name := elt.MustElement(".product-grid-product-info__main-info").MustText()

@@ -28,6 +28,13 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 
 	keyword := req.URL.Query().Get("q")
 	shopsQuery := req.URL.Query().Get("shops")
+	gender := req.URL.Query().Get("gender")
+
+	if gender == "" || keyword == "" {
+		rsp.WriteHeader(http.StatusBadRequest)
+		rsp.Write([]byte("keyword or gender missing"))
+		return
+	}
 
 	var articles []shared.Article
 
@@ -45,8 +52,10 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 	articlesChan := make(chan []shared.Article, len(shops))
 	defer close(articlesChan)
 
+	params := common.NewSearchParams(gender, keyword)
+
 	for _, shop := range shops {
-		go fetchArticles(browser, shop, keyword, articlesChan)
+		go fetchArticles(browser, shop, params, articlesChan)
 	}
 
 	for i := 0; i < len(shops); i++ {
@@ -70,31 +79,34 @@ func getShopsFromQuery(query string) (shops []shared.Shop) {
 	return
 }
 
-func fetchArticles(browser *rod.Browser, shop shared.Shop, keywords string, articlesChan chan<- []shared.Article) {
-	switch shop {
-	/*case shared.SHEIN:
-	getArticlesByKeywords(articlesChan, SHEIN.NewScrapper(), keyword)
-	break*/
-	case shared.HM:
-		getArticlesByKeywords(browser, articlesChan, HM.NewScrapper(), keywords)
-		break
-	case shared.BERSHKA:
-		getArticlesByKeywords(browser, articlesChan, BERSHKA.NewScrapper(), keywords)
-		break
-	case shared.ZARA:
-		getArticlesByKeywords(browser, articlesChan, ZARA.NewScrapper(), keywords)
-		break
-	case shared.PULLANDBEAR:
-		getArticlesByKeywords(browser, articlesChan, PULLBEAR.NewScrapper(), keywords)
-		break
+func fetchArticles(browser *rod.Browser, shop shared.Shop, params common.SearchParams, ch chan<- []shared.Article) {
+	scraper := getScraper(shop)
+	if scraper == nil {
+		return
 	}
-}
 
-func getArticlesByKeywords(browser *rod.Browser, ch chan<- []shared.Article, scraper common.Scraper, keyword string) {
-	err, art := scraper.GetByKeywords(browser, keyword)
+	err, arts := scraper.GetByKeywords(browser, params)
+
 	if err != nil {
 		return
 	}
 
-	ch <- art
+	ch <- arts
+}
+
+func getScraper(shop shared.Shop) common.Scraper {
+	switch shop {
+	/*case shared.SHEIN:
+	getShopArticles(articlesChan, SHEIN.NewScrapper(), keyword)
+	break*/
+	case shared.HM:
+		return HM.NewScrapper()
+	case shared.BERSHKA:
+		return BERSHKA.NewScrapper()
+	case shared.ZARA:
+		return ZARA.NewScrapper()
+	case shared.PULLANDBEAR:
+		return PULLBEAR.NewScrapper()
+	}
+	return nil
 }

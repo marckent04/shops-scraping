@@ -1,7 +1,6 @@
 package HM
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"shops-scraping/shared"
 	"strconv"
@@ -10,31 +9,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/go-rod/rod"
 )
-
-func getProducts(browser *rod.Browser, keywords string) (err error, articles []shared.Article) {
-
-	log.Println("H&M products getting in progress ...")
-
-	page := browser.MustPage(fmt.Sprintf("%s?q=%s", searchUrl, keywords)).MustWaitDOMStable()
-
-	if !page.MustHas(productsListSelector) {
-		return
-	}
-
-	page = page.MustWaitElementsMoreThan(productSelector, 5)
-
-	page.Mouse.Scroll(10, 10000, 10)
-
-	foundArticles := page.MustElements(productSelector)
-
-	log.Println("H&M products getting finished")
-
-	for _, v := range foundArticles {
-		articles = append(articles, rodeToArticle(v))
-	}
-
-	return
-}
 
 func rodeToArticle(node *rod.Element) shared.Article {
 
