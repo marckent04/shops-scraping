@@ -2,8 +2,8 @@ package ZARA
 
 import (
 	"fmt"
-	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
+	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
 )
@@ -12,13 +12,16 @@ type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(browser *rod.Browser, p common.SearchParams) (err error, articles []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []shared.Article) {
+
+	browser := Browser.GetInstance()
 
 	gender := genders[p.Gender]
 
 	log.Printf("%s products for %s getting in progress ...", shopName, gender)
 
 	page := browser.MustPage(fmt.Sprintf(searchUrl, p.Keywords, gender)).MustWaitDOMStable()
+	defer page.MustClose()
 
 	if page.MustHas(".zds-empty-state__title") {
 		return

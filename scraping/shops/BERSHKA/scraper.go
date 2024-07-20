@@ -2,8 +2,8 @@ package BERSHKA
 
 import (
 	"fmt"
-	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
+	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
 	"strings"
@@ -13,10 +13,13 @@ type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(browser *rod.Browser, p common.SearchParams) (err error, articles []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []shared.Article) {
 	log.Printf("%s products getting in progress ...", shopName)
 
+	browser := Browser.GetInstance()
+
 	page := browser.MustPage(fmt.Sprintf("%s/%s?gender=%s", searchUrl, p.Keywords, genders[p.Gender])).MustWaitDOMStable()
+	defer page.MustClose()
 
 	isEmpty := page.MustHas(".search-empty__empty")
 
