@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"shops-scraping/scraping/Browser"
 	"shops-scraping/webservice"
 	articlesController "shops-scraping/webservice/articles"
 )
@@ -13,7 +14,12 @@ import (
 func main() {
 
 	setupEnv()
+
+	Browser.CreateInstance()
+	defer Browser.GetInstance().MustClose()
+
 	startWebserver()
+
 }
 
 func setupEnv() {

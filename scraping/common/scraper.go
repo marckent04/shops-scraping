@@ -1,7 +1,6 @@
 package common
 
 import (
-	"github.com/go-rod/rod"
 	"shops-scraping/shared"
 )
 
@@ -13,7 +12,7 @@ const (
 )
 
 type Scraper interface {
-	GetByKeywords(browser *rod.Browser, params SearchParams) (error, []shared.Article)
+	GetByKeywords(params SearchParams) (error, []shared.Article)
 }
 
 type SearchParams struct {

@@ -2,7 +2,6 @@ package articlesController
 
 import (
 	"encoding/json"
-	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"shops-scraping/scraping/common"
@@ -46,16 +45,13 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	browser := rod.New().MustConnect()
-	defer browser.MustClose()
-
 	articlesChan := make(chan []shared.Article, len(shops))
 	defer close(articlesChan)
 
 	params := common.NewSearchParams(gender, keyword)
 
 	for _, shop := range shops {
-		go fetchArticles(browser, shop, params, articlesChan)
+		go fetchArticles(shop, params, articlesChan)
 	}
 
 	for i := 0; i < len(shops); i++ {
@@ -79,13 +75,13 @@ func getShopsFromQuery(query string) (shops []shared.Shop) {
 	return
 }
 
-func fetchArticles(browser *rod.Browser, shop shared.Shop, params common.SearchParams, ch chan<- []shared.Article) {
+func fetchArticles(shop shared.Shop, params common.SearchParams, ch chan<- []shared.Article) {
 	scraper := getScraper(shop)
 	if scraper == nil {
 		return
 	}
 
-	err, arts := scraper.GetByKeywords(browser, params)
+	err, arts := scraper.GetByKeywords(params)
 
 	if err != nil {
 		return
@@ -96,9 +92,6 @@ func fetchArticles(browser *rod.Browser, shop shared.Shop, params common.SearchP
 
 func getScraper(shop shared.Shop) common.Scraper {
 	switch shop {
-	/*case shared.SHEIN:
-	getShopArticles(articlesChan, SHEIN.NewScrapper(), keyword)
-	break*/
 	case shared.HM:
 		return HM.NewScrapper()
 	case shared.BERSHKA:
