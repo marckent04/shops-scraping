@@ -3,8 +3,8 @@
         <div class="mb-2">
           <v-text-field type="search" placeholder="..." label="I search for"  v-model="form.keyword">
           </v-text-field>
-          <div class="d-flex">
-            <div class="mr-4">
+          <div class="d-flex justify-lg-space-evenly">
+            <div>
               <input type="radio" id="woman" value="w" v-model="form.gender" class="mr-2">
               <label for="woman">Femme</label>
             </div>

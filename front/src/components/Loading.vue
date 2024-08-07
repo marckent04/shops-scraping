@@ -1,6 +1,6 @@
 <template>
   <div class="loading">
-      <h2 class="text-center">Merci de patienter nous réalisons votre demande ...<br /> Attente moyenne estimée: 15s</h2>
+      <h2 class="text-center">Merci de patienter nous réalisons votre demande ...</h2>
   </div>
 </template>
 
