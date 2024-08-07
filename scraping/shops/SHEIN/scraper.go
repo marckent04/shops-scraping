@@ -17,7 +17,3 @@ func (s Scraper) GetByKeywords(keywords string) (err error, articles []shared.Ar
 
 	return
 }
-
-//func NewScrapper() common.Scraper {
-//	return &Scraper{url: searchUrl}
-//}
