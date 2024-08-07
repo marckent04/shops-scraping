@@ -11,11 +11,13 @@
   "dependencies": {
     "@heroicons/vue": "^2.1.4",
     "axios": "^1.7.2",
+    "pinia": "^2.2.0",
     "vue": "^3.4.29",
     "vue-router": "4",
     "vuetify": "^3.6.12"
   },
   "devDependencies": {
+    "@mdi/font": "^7.4.47",
     "@vitejs/plugin-vue": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
