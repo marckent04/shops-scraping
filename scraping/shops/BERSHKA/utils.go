@@ -15,7 +15,9 @@ func rodeToArticle(elt *rod.Element) shared.Article {
 	priceText, _ := elt.MustElement("[data-qa-anchor=\"productItemPrice\"]").Text()
 	price := getProductPrice(priceText)
 
-	return shared.New(name, *image, *detailsUrl, "H&M", price, "€")
+	url := "https://www.bershka.com" + *detailsUrl
+
+	return shared.New(name, *image, url, shopName, price, "€")
 }
 
 func getProductPrice(priceText string) float32 {
