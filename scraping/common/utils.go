@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strconv"
@@ -21,4 +22,9 @@ func GetPrice(txt string) float32 {
 	}
 
 	return float32(price)
+}
+
+func CloseCookieDialog(page *rod.Page) {
+	cookiesContainer := "#onetrust-consent-sdk"
+	page.MustElement(cookiesContainer).MustRemove()
 }

@@ -47,12 +47,14 @@ func getProductPrice(node *rod.Element) float32 {
 func getArticleImage(doc *rod.Element) string {
 	img := doc.MustElement("img")
 
-	mainImg, err :=
-		img.Attribute("src")
-
-	if err != nil {
-		return ""
+	mainImg := img.MustAttribute("src")
+	if strings.HasPrefix(*mainImg, "https") {
+		return *mainImg
 	}
 
-	return *mainImg
+	doc.MustHover()
+	for !strings.HasPrefix(*img.MustAttribute("src"), "https") {
+		log.Printf("wait for image url loading")
+	}
+	return *img.MustAttribute("src")
 }

@@ -20,26 +20,16 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 	page := browser.MustPage(fmt.Sprintf(searchUrl, genders[p.Gender], p.Keywords)).MustWaitDOMStable()
 	defer page.MustClose()
 
-	acceptCookiesBtn := "#onetrust-accept-btn-handler"
-	err = page.WaitElementsMoreThan(acceptCookiesBtn, 0)
-	if err != nil {
-		return err, nil
-	}
-
-	page.MustElement(acceptCookiesBtn).MustClick()
-
-	err = page.Mouse.Scroll(0, 6000, 10)
-	if err != nil {
-		log.Error("error when scroll", err)
-	}
+	common.CloseCookieDialog(page)
 
 	grid := getSearchGrid(page)
-
 	if grid.MustHas(".results") {
+		// TODO: current duration: 929ms [to optimize]
 		foundArticles := getArticlesSD(grid)
 		for _, node := range foundArticles {
 			articles = append(articles, rodeToArticle(node))
 		}
+
 	}
 
 	log.Printf("%s products getting finished ...", shopName)
