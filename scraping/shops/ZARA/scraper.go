@@ -29,16 +29,17 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 
 	page = page.MustWaitElementsMoreThan(articleSelector, 1)
 
-	err = page.Mouse.Scroll(10, 10000, 15)
-	if err != nil {
-		return err, nil
-	}
+	common.CloseCookieDialog(page)
 
+	// TODO: current time: 2.3s [a optimiser]
 	foundArticles := page.MustElements(articleSelector)
-
 	for _, node := range foundArticles {
 		if !node.MustHas(".money-amount__main") {
 			continue
+		}
+
+		if node.MustHas(".products-category-grid-media-carousel-placeholder__loader") {
+			node.MustHover()
 		}
 
 		articles = append(articles, rodeToArticle(node))

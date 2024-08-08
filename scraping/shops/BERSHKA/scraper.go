@@ -27,10 +27,6 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 		return
 	}
 
-	page = page.MustWaitElementsMoreThan(articleSelector, 4)
-
-	page.Mouse.Scroll(10, 10000, 15)
-
 	foundArticles := page.MustElements(articleSelector)
 
 	for _, node := range foundArticles {

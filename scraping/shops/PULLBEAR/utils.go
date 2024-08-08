@@ -19,12 +19,11 @@ func rodeToArticle(elt *rod.Element) shared.Article {
 }
 
 func getArticleImg(elt *rod.Element) string {
-	imgContainer := elt.MustElement("x-media").MustShadowRoot().MustElement("lazy-image").MustShadowRoot()
-	return *imgContainer.MustElement("img").MustAttribute("src")
+	media := elt.MustElement("x-media").MustShadowRoot().MustElement("lazy-image")
+	return *media.MustAttribute("src")
 }
 
 func getArticlePrice(elt *rod.Element) float32 {
-
 	price := elt.MustElement(".current-price")
 
 	priceTxt := price.MustText()
