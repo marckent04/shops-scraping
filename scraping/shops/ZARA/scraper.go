@@ -20,17 +20,15 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 
 	log.Printf("%s products for %s getting in progress ...", shopName, gender)
 
-	page := browser.MustPage(fmt.Sprintf(searchUrl, p.Keywords, gender)).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf(searchUrl, p.Keywords, gender))
 	defer page.MustClose()
 
-	if page.MustHas(".zds-empty-state__title") {
+	hasResults := common.WaitForLoad(page, articleSelector, ".zds-empty-state__title")
+	if !hasResults {
 		return
 	}
 
-	page = page.MustWaitElementsMoreThan(articleSelector, 1)
-
 	common.CloseCookieDialog(page)
-
 	// TODO: current time: 2.3s [a optimiser]
 	foundArticles := page.MustElements(articleSelector)
 	for _, node := range foundArticles {

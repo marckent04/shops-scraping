@@ -28,3 +28,24 @@ func CloseCookieDialog(page *rod.Page) {
 	cookiesContainer := "#onetrust-consent-sdk"
 	page.MustElement(cookiesContainer).MustRemove()
 }
+
+func WaitForLoad(page *rod.Page, resultsSelector, emptySelector string) (hasResults bool) {
+	var ch = make(chan bool, 1)
+
+	go func() {
+		err := page.WaitElementsMoreThan(resultsSelector, 0)
+		if err == nil {
+			ch <- true
+		}
+	}()
+	go func() {
+		err := page.WaitElementsMoreThan(emptySelector, 0)
+		if err == nil {
+			ch <- false
+		}
+	}()
+
+	hasResults = <-ch
+
+	return
+}

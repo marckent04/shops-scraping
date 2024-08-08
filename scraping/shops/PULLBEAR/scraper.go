@@ -17,22 +17,20 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 
 	browser := Browser.GetInstance()
 
-	page := browser.MustPage(fmt.Sprintf(searchUrl, genders[p.Gender], p.Keywords)).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf(searchUrl, genders[p.Gender], p.Keywords))
 	defer page.MustClose()
-
-	common.CloseCookieDialog(page)
+	defer log.Printf("%s products getting finished ...", shopName)
 
 	grid := getSearchGrid(page)
+	common.CloseCookieDialog(page)
+
 	if grid.MustHas(".results") {
 		// TODO: current duration: 929ms [to optimize]
 		foundArticles := getArticlesSD(grid)
 		for _, node := range foundArticles {
 			articles = append(articles, rodeToArticle(node))
 		}
-
 	}
-
-	log.Printf("%s products getting finished ...", shopName)
 
 	return
 }

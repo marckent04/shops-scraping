@@ -2,7 +2,9 @@ package Browser
 
 import (
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"log"
+	"os"
 )
 
 var browser *rod.Browser
@@ -15,6 +17,13 @@ func GetInstance() *rod.Browser {
 }
 
 func CreateInstance() {
-	browser = rod.New().MustConnect()
+	if os.Getenv("DEBUG") == "true" {
+		u := launcher.New().
+			Headless(false).
+			MustLaunch()
+		browser = rod.New().ControlURL(u).MustConnect()
+	} else {
+		browser = rod.New().MustConnect()
+	}
 	log.Println("browser instance created")
 }

@@ -42,5 +42,6 @@ func getArticlesSD(searchGrid *rod.Element) rod.Elements {
 }
 
 func getSearchGrid(page *rod.Page) *rod.Element {
+	page.MustWaitElementsMoreThan("search-app", 0)
 	return page.MustElement("search-app").MustShadowRoot().MustElement("search-grid").MustShadowRoot()
 }

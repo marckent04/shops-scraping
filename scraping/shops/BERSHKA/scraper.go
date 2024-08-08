@@ -2,11 +2,11 @@ package BERSHKA
 
 import (
 	"fmt"
+	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
-	"strings"
 )
 
 type Scraper struct {
@@ -18,34 +18,47 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 
 	browser := Browser.GetInstance()
 
-	page := browser.MustPage(fmt.Sprintf("%s/%s?gender=%s", searchUrl, p.Keywords, genders[p.Gender])).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf("%s/%s?gender=%s", searchUrl, p.Keywords, genders[p.Gender]))
 	defer page.MustClose()
+	defer log.Printf("%s articles getting finished", shopName)
 
-	isEmpty := page.MustHas(".search-empty__empty")
-
-	if isEmpty {
+	hasResults := s.waitForLoad(page)
+	if !hasResults {
 		return
 	}
 
 	foundArticles := page.MustElements(articleSelector)
-
 	for _, node := range foundArticles {
-		h, _ := node.HTML()
-
-		isArticle := strings.Contains(h, "data-qa-anchor=\"productItemText\"")
-
-		if !isArticle {
-			continue
+		article, err := rodeToArticle(node)
+		if err == nil {
+			articles = append(articles, article)
 		}
-
-		articles = append(articles, rodeToArticle(node))
 	}
-
-	log.Printf("%s articles getting finished", shopName)
 
 	if err != nil {
 		log.Println(err.Error())
 	}
+
+	return
+}
+
+func (s Scraper) waitForLoad(page *rod.Page) (hasResults bool) {
+	var ch = make(chan bool, 1)
+
+	go func() {
+		err := page.WaitElementsMoreThan(articleSelector, 0)
+		if err == nil {
+			ch <- true
+		}
+	}()
+	go func() {
+		err := page.WaitElementsMoreThan(".search-empty__empty", 0)
+		if err == nil {
+			ch <- false
+		}
+	}()
+
+	hasResults = <-ch
 
 	return
 }

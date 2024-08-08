@@ -18,19 +18,20 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []sha
 
 	browser := Browser.GetInstance()
 
-	page := browser.MustPage(fmt.Sprintf("%s?q=%s&department=%s", searchUrl, p.Keywords, genders[p.Gender])).MustWaitDOMStable()
+	page := browser.MustPage(fmt.Sprintf("%s?q=%s&department=%s", searchUrl, p.Keywords, genders[p.Gender]))
 	defer page.MustClose()
 
-	common.CloseCookieDialog(page)
+	err = page.WaitElementsMoreThan(productSelector, 5)
+	if err != nil {
+		return
+	}
 
 	if !page.MustHas(productsListSelector) {
 		return
 	}
-
-	page = page.MustWaitElementsMoreThan(productSelector, 5)
+	common.CloseCookieDialog(page)
 
 	foundArticles := page.MustElements(productSelector)
-
 	log.Println(msg, " finished")
 
 	for _, v := range foundArticles {
