@@ -10,7 +10,7 @@ export const useCartStore = defineStore('cart', () => {
     const currency = computed(() => items.value[0]?.currency)
    async function add(article: Article): Promise<boolean> {
        try {
-          await client.post("/cart/add", article)
+          await client.post("/cart", article)
            return true
        } catch (e) {
            console.error(e)
@@ -20,7 +20,7 @@ export const useCartStore = defineStore('cart', () => {
 
     async function remove(id: string): Promise<boolean> {
         try {
-            await client.delete("/cart/delete-line", {
+            await client.delete("/cart/line", {
                 params: { id }
             })
             return true
@@ -32,7 +32,7 @@ export const useCartStore = defineStore('cart', () => {
 
     async function clear(){
         try {
-            await client.delete("/cart/clear")
+            await client.delete("/cart")
             items.value = []
         } catch (e) {
             console.error(e)
