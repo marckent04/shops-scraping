@@ -14,7 +14,7 @@ type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) ([]shared.Article, error) {
 	log.Printf("%s products getting in progress ...", shopName)
 	defer log.Printf("%s articles getting finished", shopName)
 
@@ -24,7 +24,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 
 	hasResults := s.waitForLoad(page)
 	if !hasResults {
-		return nil, make([]shared.Article, 0)
+		return make([]shared.Article, 0), nil
 	}
 
 	foundArticles := page.MustElements(articleSelector)
@@ -44,7 +44,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 
 	wg.Wait()
 
-	return nil, collection.Get()
+	return collection.Get(), nil
 }
 
 func (s Scraper) waitForLoad(page *rod.Page) (hasResults bool) {

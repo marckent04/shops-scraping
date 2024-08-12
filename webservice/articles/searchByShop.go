@@ -80,7 +80,7 @@ func fetchArticles(shop shared.Shop, params common.SearchParams, ch chan<- []sha
 		return
 	}
 
-	err, arts := scraper.GetByKeywords(params)
+	arts, err := scraper.GetByKeywords(params)
 	if err != nil {
 		ch <- make([]shared.Article, 0)
 		return

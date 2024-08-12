@@ -13,7 +13,7 @@ type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) ([]shared.Article, error) {
 	gender := genders[p.Gender]
 	log.Printf("%s products for %s getting in progress ...\n", shopName, gender)
 	defer log.Printf("%s products for %s getting finished\n", shopName, gender)
@@ -24,7 +24,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 
 	hasResults := common.WaitForLoad(page, articleSelector, ".zds-empty-state__title")
 	if !hasResults {
-		return nil, []shared.Article{}
+		return make([]shared.Article, 0), nil
 	}
 
 	common.CloseCookieDialog(page)
@@ -47,7 +47,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 	}
 	wg.Wait()
 
-	return nil, collection.Get()
+	return collection.Get(), nil
 }
 
 func NewScrapper() common.Scraper {
