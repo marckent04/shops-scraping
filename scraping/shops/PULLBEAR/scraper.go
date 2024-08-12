@@ -13,7 +13,7 @@ type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) ([]shared.Article, error) {
 	log.Printf("%s products getting in progress ...", shopName)
 
 	var articles []shared.Article
@@ -29,7 +29,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 	common.CloseCookieDialog(page)
 
 	if !grid.MustHas(".results") {
-		return nil, articles
+		return articles, nil
 	}
 
 	collection := common.ArticlesCollection{}
@@ -52,7 +52,7 @@ func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) 
 
 	articles = append(articles, collection.Get()...)
 
-	return nil, articles
+	return articles, nil
 }
 
 func NewScrapper() common.Scraper {

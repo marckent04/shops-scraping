@@ -12,7 +12,7 @@ const (
 )
 
 type Scraper interface {
-	GetByKeywords(params SearchParams) (error, []shared.Article)
+	GetByKeywords(params SearchParams) ([]shared.Article, error)
 }
 
 type SearchParams struct {
