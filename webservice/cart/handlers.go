@@ -10,11 +10,7 @@ import (
 	"strconv"
 )
 
-func addToCart(rsp http.ResponseWriter, req *http.Request) {
-	if !utils.ValidateMethod(rsp, req, "POST") {
-		return
-	}
-
+func AddToCart(rsp http.ResponseWriter, req *http.Request) {
 	var dto createCartLineDto
 	err := json.NewDecoder(req.Body).Decode(&dto)
 	if err != nil {
@@ -38,11 +34,7 @@ func addToCart(rsp http.ResponseWriter, req *http.Request) {
 	utils.ServeJsonResponse(rsp, line)
 }
 
-func getCart(rsp http.ResponseWriter, req *http.Request) {
-	if !utils.ValidateMethod(rsp, req, "GET") {
-		return
-	}
-
+func GetCart(rsp http.ResponseWriter, _ *http.Request) {
 	cartLines, err := database.GetCartLines()
 	if err != nil {
 		utils.ServeMessageResponse(rsp, "Error during cart getting", http.StatusInternalServerError)
@@ -61,11 +53,7 @@ func getCart(rsp http.ResponseWriter, req *http.Request) {
 	utils.ServeJsonResponse(rsp, lines)
 }
 
-func clearCart(rsp http.ResponseWriter, req *http.Request) {
-	if !utils.ValidateMethod(rsp, req, "DELETE") {
-		return
-	}
-
+func ClearCart(rsp http.ResponseWriter, _ *http.Request) {
 	err := database.ClearCart()
 	if err != nil {
 		utils.ServeMessageResponse(rsp, "Error during cart clear", http.StatusInternalServerError)
@@ -75,11 +63,7 @@ func clearCart(rsp http.ResponseWriter, req *http.Request) {
 	utils.ServeMessageResponse(rsp, "Cart clear successfully", http.StatusOK)
 }
 
-func deleteCartLine(w http.ResponseWriter, r *http.Request) {
-	if !utils.ValidateMethod(w, r, "DELETE") {
-		return
-	}
-
+func DeleteCartLine(w http.ResponseWriter, r *http.Request) {
 	idParam := r.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(idParam)

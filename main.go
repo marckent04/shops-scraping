@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"os"
 	"shops-scraping/database"
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/webservice"
-	articlesController "shops-scraping/webservice/articles"
-	cartController "shops-scraping/webservice/cart"
+	articles "shops-scraping/webservice/articles"
+	"shops-scraping/webservice/cart"
 )
 
 func main() {
@@ -50,15 +49,19 @@ func setupEnv() {
 }
 
 func startWebserver() {
-	webservice.ServeFrontend()
-	webservice.RegisterApiRoutes(articlesController.Routes)
-	webservice.RegisterApiRoutes(cartController.Routes)
-
 	log.Println("Welcome to shop scraper app")
+	webservice.ServeFrontend()
 
 	port := os.Getenv("PORT")
-	log.Println("server is launching on port ", port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
-		log.Fatal(err)
-	}
+	app := webservice.NewHttpRouter()
+
+	app.SetGlobalPrefix("/api")
+	app.Get("/articles", articles.SearchByShops)
+	app.Get("/cart", cart.GetCart)
+	app.Delete("/cart/line", cart.DeleteCartLine)
+	app.Delete("/cart", cart.ClearCart)
+	app.Post("/cart", cart.AddToCart)
+
+	app.Listen(port)
+
 }

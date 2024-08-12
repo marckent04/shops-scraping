@@ -22,7 +22,7 @@ var supportedShops = []shared.Shop{
 	shared.PULLANDBEAR,
 }
 
-func searchByShops(rsp http.ResponseWriter, req *http.Request) {
+func SearchByShops(rsp http.ResponseWriter, req *http.Request) {
 	start := time.Now()
 
 	keyword := req.URL.Query().Get("q")
@@ -76,11 +76,13 @@ func getShopsFromQuery(query string) (shops []shared.Shop) {
 func fetchArticles(shop shared.Shop, params common.SearchParams, ch chan<- []shared.Article) {
 	scraper := getScraper(shop)
 	if scraper == nil {
+		ch <- make([]shared.Article, 0)
 		return
 	}
 
 	err, arts := scraper.GetByKeywords(params)
 	if err != nil {
+		ch <- make([]shared.Article, 0)
 		return
 	}
 
