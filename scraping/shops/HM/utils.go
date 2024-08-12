@@ -52,7 +52,6 @@ func getArticleImage(doc *rod.Element) string {
 		return *mainImg
 	}
 
-	doc.MustHover()
 	for !strings.HasPrefix(*img.MustAttribute("src"), "https") {
 		log.Printf("wait for image url loading")
 	}

@@ -2,8 +2,8 @@
    <div class="d-flex justify-center align-center h-screen w-screen">
      <v-card class="main-card">
        <div class="text-center">
-         <h1 class="text-primary font-bold">Welcome to the Dark market</h1>
-         <p class="text-lg font-semi-bold text-black"> The market where you can find all your favorites markets</p>
+         <h1 class="text-primary font-bold">SHOPPING SCRAPER</h1>
+         <p class="text-lg font-semi-bold text-black">Toutes vos boutiques réunies en un seul endroit</p>
        </div>
        <section>
          <search-bar></search-bar>

@@ -7,39 +7,44 @@ import (
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
+	"sync"
 )
 
 type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
 	log.Printf("%s products getting in progress ...", shopName)
+	defer log.Printf("%s articles getting finished", shopName)
 
 	browser := Browser.GetInstance()
-
 	page := browser.MustPage(fmt.Sprintf("%s/%s?gender=%s", searchUrl, p.Keywords, genders[p.Gender]))
 	defer page.MustClose()
-	defer log.Printf("%s articles getting finished", shopName)
 
 	hasResults := s.waitForLoad(page)
 	if !hasResults {
-		return
+		return nil, make([]shared.Article, 0)
 	}
 
 	foundArticles := page.MustElements(articleSelector)
-	for _, node := range foundArticles {
-		article, err := rodeToArticle(node)
-		if err == nil {
-			articles = append(articles, article)
-		}
+	collection := common.ArticlesCollection{}
+	var wg sync.WaitGroup
+	for _, art := range foundArticles {
+		node := art
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			article, err := rodeToArticle(node)
+			if err == nil {
+				collection.Push(article)
+			}
+		}()
 	}
 
-	if err != nil {
-		log.Println(err.Error())
-	}
+	wg.Wait()
 
-	return
+	return nil, collection.Get()
 }
 
 func (s Scraper) waitForLoad(page *rod.Page) (hasResults bool) {
