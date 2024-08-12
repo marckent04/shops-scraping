@@ -1,7 +1,7 @@
 <template>
       <v-form class="text-center" @submit.prevent="search">
         <div class="mb-2">
-          <v-text-field type="search" placeholder="..." label="I search for"  v-model="form.keyword">
+          <v-text-field type="search" placeholder="short, t shirt ..." label="Je suis a la recherche de ..."  v-model="form.keyword">
           </v-text-field>
           <div class="d-flex justify-lg-space-evenly">
             <div>

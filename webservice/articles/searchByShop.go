@@ -1,7 +1,6 @@
 package articlesController
 
 import (
-	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"shops-scraping/scraping/common"
@@ -10,6 +9,7 @@ import (
 	"shops-scraping/scraping/shops/PULLBEAR"
 	"shops-scraping/scraping/shops/ZARA"
 	"shops-scraping/shared"
+	"shops-scraping/webservice/utils"
 	"slices"
 	"strings"
 	"time"
@@ -58,11 +58,9 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 		articles = append(articles, <-articlesChan...)
 	}
 
-	indent, _ := json.MarshalIndent(articles, "", " ")
-	elapsed := time.Since(start)
+	utils.ServeJsonResponse(rsp, articles)
+	log.Println("time elapsed : ", time.Since(start))
 
-	log.Println("time elapsed : ", elapsed)
-	rsp.Write(indent)
 }
 
 func getShopsFromQuery(query string) (shops []shared.Shop) {
@@ -82,7 +80,6 @@ func fetchArticles(shop shared.Shop, params common.SearchParams, ch chan<- []sha
 	}
 
 	err, arts := scraper.GetByKeywords(params)
-
 	if err != nil {
 		return
 	}

@@ -6,38 +6,50 @@ import (
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
+	"sync"
 )
 
 type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
 	msg := fmt.Sprintf("Search for %s at %s for %s", p.Keywords, shopName, p.Gender)
 	log.Println(msg, " started")
+	defer log.Println(msg, " finished")
 
 	browser := Browser.GetInstance()
 
 	page := browser.MustPage(fmt.Sprintf("%s?q=%s&department=%s", searchUrl, p.Keywords, genders[p.Gender]))
 	defer page.MustClose()
 
-	err = page.WaitElementsMoreThan(productSelector, 5)
+	err := page.WaitElementsMoreThan(productSelector, 0)
 	if err != nil {
-		return
+		return err, make([]shared.Article, 0)
 	}
 
 	if !page.MustHas(productsListSelector) {
-		return
+		return nil, make([]shared.Article, 0)
 	}
 	common.CloseCookieDialog(page)
 
 	foundArticles := page.MustElements(productSelector)
-	log.Println(msg, " finished")
 
+	collection := common.ArticlesCollection{}
+	var wg sync.WaitGroup
 	for _, v := range foundArticles {
-		articles = append(articles, rodeToArticle(v))
+		node := v
+		node = node.MustHover()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			collection.Push(rodeToArticle(node))
+		}()
 	}
-	return
+
+	wg.Wait()
+
+	return nil, collection.Get()
 }
 
 func NewScrapper() common.Scraper {

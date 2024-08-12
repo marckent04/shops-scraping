@@ -6,43 +6,48 @@ import (
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/scraping/common"
 	"shops-scraping/shared"
+	"sync"
 )
 
 type Scraper struct {
 	url string
 }
 
-func (s Scraper) GetByKeywords(p common.SearchParams) (err error, articles []shared.Article) {
+func (s Scraper) GetByKeywords(p common.SearchParams) (error, []shared.Article) {
+	gender := genders[p.Gender]
+	log.Printf("%s products for %s getting in progress ...\n", shopName, gender)
+	defer log.Printf("%s products for %s getting finished\n", shopName, gender)
 
 	browser := Browser.GetInstance()
-
-	gender := genders[p.Gender]
-
-	log.Printf("%s products for %s getting in progress ...", shopName, gender)
-
 	page := browser.MustPage(fmt.Sprintf(searchUrl, p.Keywords, gender))
 	defer page.MustClose()
 
 	hasResults := common.WaitForLoad(page, articleSelector, ".zds-empty-state__title")
 	if !hasResults {
-		return
+		return nil, []shared.Article{}
 	}
 
 	common.CloseCookieDialog(page)
-	// TODO: current time: 2.3s [a optimiser]
+
 	foundArticles := page.MustElements(articleSelector)
-	for _, node := range foundArticles {
-		if !node.MustHas(".money-amount__main") {
-			continue
-		}
+	collection := common.ArticlesCollection{}
+	var wg sync.WaitGroup
+	for _, element := range foundArticles {
+		node := element
+		node.MustHover()
 
-		if node.MustHas(".products-category-grid-media-carousel-placeholder__loader") {
-			node.MustHover()
-		}
-
-		articles = append(articles, rodeToArticle(node))
+		wg.Add(1)
+		go func() {
+			article, err := rodeToArticle(node)
+			if err == nil {
+				collection.Push(article)
+			}
+			wg.Done()
+		}()
 	}
-	return
+	wg.Wait()
+
+	return nil, collection.Get()
 }
 
 func NewScrapper() common.Scraper {

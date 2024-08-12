@@ -7,15 +7,13 @@ import (
 	"strings"
 )
 
-func rodeToArticle(elt *rod.Element) shared.Article {
-	eltSh := elt.MustShadowRoot()
-	eltSh.MustElement(".product-name").MustText()
-	detailsUrl := eltSh.MustElement("a").MustAttribute("href")
-	name := strings.ToTitle(eltSh.MustElement(".product-name").MustText())
-	price := getArticlePrice(eltSh)
-	image := getArticleImg(eltSh)
+func rodeToArticle(elt *rod.Element) (shared.Article, error) {
+	name := elt.MustElement(".product-name").MustText()
+	detailsUrl := elt.MustElement("a").MustAttribute("href")
+	price := getArticlePrice(elt)
+	image := getArticleImg(elt)
 
-	return shared.New(strings.ToTitle(name), image, *detailsUrl, shopName, price, "€")
+	return shared.New(strings.ToTitle(name), image, *detailsUrl, shopName, price, "€"), nil
 }
 
 func getArticleImg(elt *rod.Element) string {
@@ -37,11 +35,13 @@ func getArticlePrice(elt *rod.Element) float32 {
 	return common.GetPrice(priceLabel)
 }
 
-func getArticlesSD(searchGrid *rod.Element) rod.Elements {
-	return searchGrid.MustElements(articleSelector)
+func getArticlesNodes(searchGrid *rod.Element) (elements rod.Elements) {
+	for _, element := range searchGrid.MustElements(articleSelector) {
+		elements = append(elements, element.MustShadowRoot())
+	}
+	return
 }
 
 func getSearchGrid(page *rod.Page) *rod.Element {
-	page.MustWaitElementsMoreThan("search-app", 0)
 	return page.MustElement("search-app").MustShadowRoot().MustElement("search-grid").MustShadowRoot()
 }

@@ -17,7 +17,7 @@ type Scraper interface {
 
 type SearchParams struct {
 	Gender   Gender
-	Keywords Gender
+	Keywords string
 }
 
 func NewSearchParams(gender Gender, keywords string) SearchParams {

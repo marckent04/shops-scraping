@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/go-rod/rod"
 	log "github.com/sirupsen/logrus"
+	"math"
 	"regexp"
 	"strconv"
 )
@@ -47,5 +48,19 @@ func WaitForLoad(page *rod.Page, resultsSelector, emptySelector string) (hasResu
 
 	hasResults = <-ch
 
+	return
+}
+
+func Group[T comparable](collection []T, grpSize int) (grp [][]T) {
+	turns := math.Ceil(float64(float32(len(collection)) / float32(grpSize)))
+	grpNumber, _ := strconv.Atoi(strconv.FormatFloat(turns, 'f', 0, 32))
+
+	for i := 0; i < grpNumber; i++ {
+		if grpSize*(i+1) > cap(collection) {
+			grp = append(grp, collection[i*grpSize:])
+			continue
+		}
+		grp = append(grp, collection[i*grpSize:grpSize*(i+1)])
+	}
 	return
 }
