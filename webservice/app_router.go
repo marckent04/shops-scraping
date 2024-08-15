@@ -73,7 +73,7 @@ func (r *HTTPRouter) compile() {
 
 func (r *HTTPRouter) Listen(port string) {
 	r.compile()
-	log.Println("server is launching on port ", port)
+	log.Println("server is launching on port", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal(err)
 	}
