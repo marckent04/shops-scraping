@@ -17,7 +17,7 @@ func main() {
 	Browser.CreateInstance()
 	defer Browser.GetInstance().MustClose()
 
-	database.Connect("test.db")
+	database.Connect(os.Getenv("DB_PATH"))
 
 	startWebserver()
 

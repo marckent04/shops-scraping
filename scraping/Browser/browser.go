@@ -17,13 +17,14 @@ func GetInstance() *rod.Browser {
 }
 
 func CreateInstance() {
+	path, _ := launcher.LookPath()
 	if os.Getenv("DEBUG") == "true" {
-		u := launcher.New().
+		u := launcher.New().Bin(path).
 			Headless(false).
 			MustLaunch()
 		browser = rod.New().ControlURL(u).MustConnect()
 	} else {
-		browser = rod.New().MustConnect()
+		browser = rod.New().ControlURL(launcher.New().Bin(path).MustLaunch()).MustConnect()
 	}
 	log.Println("browser instance created")
 }
