@@ -1,4 +1,4 @@
-package articlesController
+package webservice
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -9,7 +9,6 @@ import (
 	"shops-scraping/scraping/shops/PULLBEAR"
 	"shops-scraping/scraping/shops/ZARA"
 	"shops-scraping/shared"
-	"shops-scraping/webservice/utils"
 	"slices"
 	"strings"
 	"time"
@@ -22,7 +21,7 @@ var supportedShops = []shared.Shop{
 	shared.PULLANDBEAR,
 }
 
-func SearchByShops(rsp http.ResponseWriter, req *http.Request) {
+func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 	start := time.Now()
 
 	keyword := req.URL.Query().Get("q")
@@ -58,7 +57,7 @@ func SearchByShops(rsp http.ResponseWriter, req *http.Request) {
 		articles = append(articles, <-articlesChan...)
 	}
 
-	utils.ServeJsonResponse(rsp, articles)
+	serveJsonResponse(rsp, articles)
 	log.Println("time elapsed : ", time.Since(start))
 
 }
@@ -92,13 +91,13 @@ func fetchArticles(shop shared.Shop, params common.SearchParams, ch chan<- []sha
 func getScraper(shop shared.Shop) common.Scraper {
 	switch shop {
 	case shared.HM:
-		return HM.NewScrapper()
+		return HM.GetScrapper()
 	case shared.BERSHKA:
-		return BERSHKA.NewScrapper()
+		return BERSHKA.GetScrapper()
 	case shared.ZARA:
-		return ZARA.NewScrapper()
+		return ZARA.GetScrapper()
 	case shared.PULLANDBEAR:
-		return PULLBEAR.NewScrapper()
+		return PULLBEAR.GetScrapper()
 	}
 	return nil
 }

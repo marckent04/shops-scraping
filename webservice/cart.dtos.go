@@ -1,4 +1,4 @@
-package cart
+package webservice
 
 import (
 	"shops-scraping/database"

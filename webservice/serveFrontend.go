@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func ServeFrontend() {
+func serveFrontend() {
 	fs := http.FileServer(http.Dir("front/dist"))
 	http.Handle("/assets/", fs)
 	routes := []string{"/", "/search"}

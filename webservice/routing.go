@@ -12,7 +12,7 @@ type Route struct {
 	Handler RouteHandler
 }
 
-func NewRoute(method string,
+func newRoute(method string,
 	path string,
 	handler RouteHandler) Route {
 	return Route{

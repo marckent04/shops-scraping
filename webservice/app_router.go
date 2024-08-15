@@ -5,7 +5,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"shops-scraping/shared"
-	"shops-scraping/webservice/utils"
 	"slices"
 )
 
@@ -45,17 +44,7 @@ func (r *HTTPRouter) registerHandler(method string, url string, handler RouteHan
 		log.Panicf("handler for %s with %s method already registered", url, method)
 	}
 
-	r.routes = append(r.routes, NewRoute(method, url, handler))
-}
-
-func (r *HTTPRouter) registerHandlerOld(method string, url string, handler RouteHandler) {
-	route := NewRoute(method, url, handler)
-	http.HandleFunc(fmt.Sprintf("%s%s", r.prefix, route.Path), func(w http.ResponseWriter, r *http.Request) {
-		if !utils.ValidateMethod(w, r, route.Method) {
-			return
-		}
-		route.Handler(w, r)
-	})
+	r.routes = append(r.routes, newRoute(method, url, handler))
 }
 
 func (r *HTTPRouter) compile() {
@@ -90,6 +79,6 @@ func (r *HTTPRouter) Listen(port string) {
 	}
 }
 
-func NewHttpRouter() HTTPRouter {
+func newHttpRouter() HTTPRouter {
 	return HTTPRouter{}
 }
