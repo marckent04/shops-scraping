@@ -27,7 +27,7 @@ import {useRoute} from "vue-router"
 import {watch, ref} from "vue"
 import {Article} from "../types/article.ts";
 import ArticleCard from "../components/ArticleCard.vue";
-import {client} from "../httpClient.ts";
+import {client} from "../api/client.ts";
 import SearchForm from "../components/SearchForm.vue";
 import Loading from "../components/Loading.vue";
 import CartButton from "../components/CartButton.vue";
@@ -77,13 +77,5 @@ watch(() => route.query, async (curr) => {
   .articles-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-  #search-modal {
-    padding: 30px;
-    width: 40vw;
-    position: absolute;
-    left: 30vw;
-    top: 40px;
 }
 </style>
