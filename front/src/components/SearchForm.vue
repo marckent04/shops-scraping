@@ -15,19 +15,19 @@
           </div>
           <div class="d-flex flex-wrap justify-space-between flex-start w-full">
             <span
-                v-for="elt in elts" :key="elt.value"
+                v-for="shop in shops" :key="shop.value"
                 class="mr-3"
             >
               <input
-                  :id="elt.value"
+                  :id="shop.value"
                   type="checkbox"
                   v-model="form.shops"
-                  :value="elt.value"
+                  :value="shop.value"
                   class="mr-1"
               />
               <label
-                  v-text="elt.text"
-                  :for="elt.value"
+                  v-text="shop.text"
+                  :for="shop.value"
               ></label>
 
             </span>
@@ -39,8 +39,10 @@
 
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import {computed, reactive, watch} from "vue";
+import {computed, onBeforeMount, reactive, ref, watch} from "vue";
+import {client} from "../api/client.ts";
 
+type Shop = { value: string, text: string }
 const router = useRouter()
 const route = useRoute();
 
@@ -52,6 +54,22 @@ const form = reactive<{keyword: string, shops: string[], gender: string}>({
 })
 
 const selectedShops = computed(() => form.shops.filter(elt => elt != "all"))
+
+
+onBeforeMount(async () => {
+  try {
+    const { data } = await client.get<Shop[]>("/shops")
+    shops.value = [
+        ...data,
+      { value: "all", text: "All shops"},
+    ]
+  } catch (e) {
+    console.error(e)
+    alert("an error occurred")
+
+  }
+})
+
 
 watch(route, (r) => {
   form.keyword = r.query.q?.toString()  ?? ""
@@ -67,34 +85,24 @@ function search() {
   }
 }
 
-const shops = [
-  { value: "pb", text: "PULL & BEAR"},
-  { value: "zara", text: "ZARA"},
-  { value: "bershka", text: "BERSHKA"},
-  { value: "hm", text: "H&M"},
-]
-
-const elts = [
-    ...shops,
-    { value: "all", text: "All shops"},
-]
+const shops = ref<Shop[]>([])
 
 watch(() => form.shops, (curr, old) => {
   const allValue = "all"
   const allSelected = curr.includes(allValue)
 
   if (allSelected && !old.includes(allValue)) {
-    form.shops = elts.map(({value}) => value)
+    form.shops = shops.value.map(({value}) => value)
     return
   }
 
- const areAllShopsSelected = selectedShops.value.length === shops.length
+ const areAllShopsSelected = selectedShops.value.length === shops.value.length
   if (old.includes(allValue) && !allSelected && areAllShopsSelected) {
     form.shops = [];
     return;
   }
 
-  if (curr.length != elts.length && allSelected) {
+  if (curr.length != shops.value.length && allSelected) {
     form.shops = form.shops.filter(elt => elt != allValue)
   }
 
