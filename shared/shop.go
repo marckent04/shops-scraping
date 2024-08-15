@@ -4,8 +4,8 @@ type Shop = string
 
 const (
 	HM          Shop = "hm"
-	SHEIN            = "shein"
-	BERSHKA          = "bershka"
-	ZARA             = "zara"
+	SHEIN            = "sh"
+	BERSHKA          = "bsk"
+	ZARA             = "zr"
 	PULLANDBEAR      = "pb"
 )
