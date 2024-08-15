@@ -8,8 +8,6 @@ import (
 	"shops-scraping/database"
 	"shops-scraping/scraping/Browser"
 	"shops-scraping/webservice"
-	articles "shops-scraping/webservice/articles"
-	"shops-scraping/webservice/cart"
 )
 
 func main() {
@@ -50,18 +48,5 @@ func setupEnv() {
 
 func startWebserver() {
 	log.Println("Welcome to shop scraper app")
-	webservice.ServeFrontend()
-
-	port := os.Getenv("PORT")
-	app := webservice.NewHttpRouter()
-
-	app.SetGlobalPrefix("/api")
-	app.Get("/articles", articles.SearchByShops)
-	app.Get("/cart", cart.GetCart)
-	app.Delete("/cart/line", cart.DeleteCartLine)
-	app.Delete("/cart", cart.ClearCart)
-	app.Post("/cart", cart.AddToCart)
-
-	app.Listen(port)
-
+	webservice.Start()
 }
