@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"shops-scraping/scraping/common"
+	"shops-scraping/scraping/shops"
 	"shops-scraping/scraping/shops/BERSHKA"
 	"shops-scraping/scraping/shops/HM"
 	"shops-scraping/scraping/shops/PULLBEAR"
@@ -13,13 +14,6 @@ import (
 	"strings"
 	"time"
 )
-
-var supportedShops = []shared.Shop{
-	shared.HM,
-	shared.BERSHKA,
-	shared.ZARA,
-	shared.PULLANDBEAR,
-}
 
 func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 	start := time.Now()
@@ -36,24 +30,24 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 
 	var articles []shared.Article
 
-	shops := getShopsFromQuery(shopsQuery)
+	reqShops := getShopsFromQuery(shopsQuery)
 
-	if len(shops) == 0 {
+	if len(reqShops) == 0 {
 		rsp.WriteHeader(http.StatusBadRequest)
 		rsp.Write([]byte("NO SUPPORTED SHOPS FOUND"))
 		return
 	}
 
-	articlesChan := make(chan []shared.Article, len(shops))
+	articlesChan := make(chan []shared.Article, len(reqShops))
 	defer close(articlesChan)
 
 	params := common.NewSearchParams(gender, keyword)
 
-	for _, shop := range shops {
+	for _, shop := range reqShops {
 		go fetchArticles(shop, params, articlesChan)
 	}
 
-	for i := 0; i < len(shops); i++ {
+	for i := 0; i < len(reqShops); i++ {
 		articles = append(articles, <-articlesChan...)
 	}
 
@@ -62,11 +56,14 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 
 }
 
-func getShopsFromQuery(query string) (shops []shared.Shop) {
+func getShopsFromQuery(query string) (foundShops []shared.Shop) {
 	rShops := strings.Split(query, ",")
-	for _, shop := range supportedShops {
-		if slices.Contains(rShops, shop) {
-			shops = append(shops, shop)
+	enabledShops := shops.GetEnabledShops()
+	for _, shop := range rShops {
+		if slices.ContainsFunc(enabledShops, func(enabledShop shops.Shop) bool {
+			return enabledShop.Code == shop
+		}) {
+			foundShops = append(foundShops, shop)
 		}
 	}
 	return

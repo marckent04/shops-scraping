@@ -68,6 +68,8 @@ func (s Scraper) waitForLoad(page *rod.Page) (hasResults bool) {
 	return
 }
 
-func NewScrapper() common.Scraper {
-	return &Scraper{url: searchUrl}
+func GetScrapper() common.Scraper {
+	return common.NewScraper("ENABLE_BERSHKA", func() common.Scraper {
+		return &Scraper{url: searchUrl}
+	})
 }

@@ -52,6 +52,8 @@ func (s Scraper) GetByKeywords(p common.SearchParams) ([]shared.Article, error) 
 	return collection.Get(), nil
 }
 
-func NewScrapper() common.Scraper {
-	return &Scraper{url: searchUrl}
+func GetScrapper() common.Scraper {
+	return common.NewScraper("ENABLE_HM", func() common.Scraper {
+		return &Scraper{url: searchUrl}
+	})
 }
