@@ -41,6 +41,7 @@
 import {useRoute, useRouter} from "vue-router";
 import {computed, onBeforeMount, reactive, ref, watch} from "vue";
 import {client} from "../api/client.ts";
+import {AxiosError} from "axios";
 
 type Shop = { value: string, text: string }
 const router = useRouter()
@@ -65,8 +66,7 @@ onBeforeMount(async () => {
     ]
   } catch (e) {
     console.error(e)
-    alert("an error occurred")
-
+    alert((e as AxiosError).response?.data ?? "Une erreur est survenue")
   }
 })
 

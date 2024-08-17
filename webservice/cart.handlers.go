@@ -9,12 +9,11 @@ import (
 	"strconv"
 )
 
-func addToCart(rsp http.ResponseWriter, req *http.Request) {
+func addToCart(_ http.ResponseWriter, req *http.Request) httpResponse {
 	var dto createCartLineDto
 	err := json.NewDecoder(req.Body).Decode(&dto)
 	if err != nil {
-		serveMessageResponse(rsp, "dto not valid", http.StatusBadRequest)
-		return
+		return httpResponse{"dto not valid", http.StatusBadRequest}
 	}
 
 	line, err := database.CreateCartLine(shared.Article{
@@ -26,18 +25,16 @@ func addToCart(rsp http.ResponseWriter, req *http.Request) {
 		DetailsUrl: dto.DetailsUrl,
 	})
 	if err != nil {
-		serveMessageResponse(rsp, "Error during cart line save", http.StatusInternalServerError)
-		return
+		return httpResponse{"Error during cart line save", http.StatusInternalServerError}
 	}
 
-	serveJsonResponse(rsp, line)
+	return httpResponse{line, http.StatusOK}
 }
 
-func getCart(rsp http.ResponseWriter, _ *http.Request) {
+func getCart(_ http.ResponseWriter, _ *http.Request) httpResponse {
 	cartLines, err := database.GetCartLines()
 	if err != nil {
-		serveMessageResponse(rsp, "Error during cart getting", http.StatusInternalServerError)
-		return
+		return httpResponse{"Error during cart getting", http.StatusInternalServerError}
 	}
 
 	var lines []cartLineDto
@@ -46,36 +43,33 @@ func getCart(rsp http.ResponseWriter, _ *http.Request) {
 	}
 
 	if len(lines) == 0 {
-		serveJsonResponse(rsp, cartLines)
-		return
+		return httpResponse{cartLines, http.StatusOK}
 	}
-	serveJsonResponse(rsp, lines)
+	return httpResponse{lines, http.StatusOK}
+
 }
 
-func clearCart(rsp http.ResponseWriter, _ *http.Request) {
+func clearCart(_ http.ResponseWriter, _ *http.Request) httpResponse {
 	err := database.ClearCart()
 	if err != nil {
-		serveMessageResponse(rsp, "Error during cart clear", http.StatusInternalServerError)
-		return
+		return httpResponse{"Error during cart clear", http.StatusInternalServerError}
 	}
 
-	serveMessageResponse(rsp, "Cart clear successfully", http.StatusOK)
+	return httpResponse{"Cart clear successfully", http.StatusOK}
 }
 
-func deleteCartLine(w http.ResponseWriter, r *http.Request) {
+func deleteCartLine(_ http.ResponseWriter, r *http.Request) httpResponse {
 	idParam := r.URL.Query().Get("id")
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		serveMessageResponse(w, "id must be required", http.StatusBadRequest)
-		return
+		return httpResponse{"id must be required", http.StatusBadRequest}
 	}
 
 	err = database.DeleteCartLine(id)
 	if err != nil {
-		serveMessageResponse(w, "Error during cart getting", http.StatusInternalServerError)
-		return
+		return httpResponse{"Error during cart getting", http.StatusInternalServerError}
 	}
 
-	serveMessageResponse(w, fmt.Sprintf("line with id %s deleted successfully", idParam), http.StatusOK)
+	return httpResponse{fmt.Sprintf("line with id %s deleted successfully", idParam), http.StatusOK}
 }

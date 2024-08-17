@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func searchByShops(rsp http.ResponseWriter, req *http.Request) {
+func searchByShops(_ http.ResponseWriter, req *http.Request) httpResponse {
 	start := time.Now()
 
 	keyword := req.URL.Query().Get("q")
@@ -23,9 +23,7 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 	gender := req.URL.Query().Get("gender")
 
 	if gender == "" || keyword == "" {
-		rsp.WriteHeader(http.StatusBadRequest)
-		rsp.Write([]byte("keyword or gender missing"))
-		return
+		return httpResponse{"keyword or gender missing", http.StatusBadRequest}
 	}
 
 	var articles []shared.Article
@@ -33,9 +31,7 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 	reqShops := getShopsFromQuery(shopsQuery)
 
 	if len(reqShops) == 0 {
-		rsp.WriteHeader(http.StatusBadRequest)
-		rsp.Write([]byte("NO SUPPORTED SHOPS FOUND"))
-		return
+		return httpResponse{"NO SUPPORTED SHOPS FOUND", http.StatusBadRequest}
 	}
 
 	articlesChan := make(chan []shared.Article, len(reqShops))
@@ -51,8 +47,8 @@ func searchByShops(rsp http.ResponseWriter, req *http.Request) {
 		articles = append(articles, <-articlesChan...)
 	}
 
-	serveJsonResponse(rsp, articles)
 	log.Println("time elapsed : ", time.Since(start))
+	return httpResponse{articles, http.StatusOK}
 
 }
 

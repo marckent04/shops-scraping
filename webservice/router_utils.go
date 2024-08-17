@@ -5,6 +5,7 @@ import (
 )
 
 type Routes = map[string]func(w http.ResponseWriter, r *http.Request)
+type RouteHandler = func(http.ResponseWriter, *http.Request) httpResponse
 
 type Route struct {
 	Path    string
@@ -20,4 +21,9 @@ func newRoute(method string,
 		Method:  method,
 		Handler: handler,
 	}
+}
+
+type httpResponse struct {
+	Data   interface{}
+	Status int
 }

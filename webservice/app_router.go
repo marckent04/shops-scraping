@@ -1,14 +1,13 @@
 package webservice
 
 import (
+	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"shops-scraping/shared"
 	"slices"
 )
-
-type RouteHandler = http.HandlerFunc
 
 type HTTPRouter struct {
 	prefix string
@@ -62,9 +61,18 @@ func (r *HTTPRouter) compile() {
 			})
 
 			for _, route := range routes {
-				if req.Method == route.Method {
-					route.Handler(w, req)
+				if req.Method != route.Method {
+					continue
 				}
+				response := route.Handler(w, req)
+				w.WriteHeader(response.Status)
+				jsonData, err := json.Marshal(response.Data)
+				if err != nil {
+					w.Write([]byte(response.Data.(string)))
+					return
+				}
+				w.Write(jsonData)
+
 			}
 		})
 	}

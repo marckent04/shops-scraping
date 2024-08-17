@@ -31,6 +31,7 @@ import {client} from "../api/client.ts";
 import SearchForm from "../components/SearchForm.vue";
 import Loading from "../components/Loading.vue";
 import CartButton from "../components/CartButton.vue";
+import {AxiosError} from "axios";
 
 const loading = ref(false)
 const dialog = ref(false)
@@ -56,7 +57,7 @@ watch(() => route.query, async (curr) => {
     }
   } catch (e) {
     console.error(e)
-    alert("an error occured")
+    alert((e as AxiosError).response?.data ?? "une erreur est survenue")
   } finally {
     loading.value = false
   }
