@@ -1,20 +1,6 @@
 <template>
   <v-container>
-  <div class="d-flex justify-space-between">
     <h3>Resultats de recherche pour "{{ route.query.q }}"</h3>
-    <div>
-      <v-btn @click="dialog = true" class="mr-3">Rechercher</v-btn>
-      <v-dialog
-          v-model="dialog"
-          width="auto"
-      >
-        <v-card class="pa-5">
-          <search-form ></search-form>
-        </v-card>
-      </v-dialog>
-      <cart-button></cart-button>
-    </div>
-  </div>
     <div class="articles-grid mt-6">
       <article-card :article="article" v-for="article in articles" :key="article.title" />
     </div>
@@ -28,23 +14,18 @@ import {watch, ref} from "vue"
 import {Article} from "../types/article.ts";
 import ArticleCard from "../components/ArticleCard.vue";
 import {client} from "../api/client.ts";
-import SearchForm from "../components/SearchForm.vue";
 import Loading from "../components/Loading.vue";
-import CartButton from "../components/CartButton.vue";
 import {AxiosError} from "axios";
 
 const loading = ref(false)
-const dialog = ref(false)
 const route = useRoute();
 const articles = ref<Article[]>([]);
-const controller = new AbortController();
 
 
 watch(() => route.query, async (curr) => {
   try {
     loading.value = true
     const { data } = await  client.get(`/articles`, {
-      signal: controller.signal,
       params: {
         q: curr.q,
         gender: curr.g,
